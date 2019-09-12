@@ -96,16 +96,59 @@ void bubble(struct Local l[], int n){
         }
     }
 }
+void shell(struct Local l[], int n){
+    int i , j;
+    struct Local value;
+
+        int gap = 1;
+        while(gap < n) {
+            gap = 3*gap+1;
+        }
+        while (gap > 0) {
+            for(i = gap; i < n; i++) {
+                value = l[i];
+                j = i;
+                while (j > gap-1 && value.room_id <= l[j - gap].room_id) {
+                    l[j] = l [j - gap];
+                    j = j - gap;
+                }
+                l [j] = value;
+            }
+            gap = gap/3;
+        }
+}
+void InsertionSort(struct Local l[], int n){
+    int i, j;
+    struct Local temp;
+    for (i=1; i<n; i++){
+        temp = l[i];
+        for (j=i; j>0 && temp.room_id < l[j-1].room_id; j--)
+            l[j] = l[j-1];
+        l[j] = temp;
+    }
+}
+void SelectionSort(struct Local l[], int n){
+    int i, j, min;
+    for (i=0; i<n-1; i++){
+        for (j=i+1, min = i; j<n; j++)
+            if (l[min].room_id > l[j].room_id)
+                min = j;
+        swap(i, min, l);
+    }
+}
 void menuOrganiza(int op, struct Local l[], int n){
     switch(op){
         case 1:
             bubble(l, n);
         break;
         case 2:
+            shell(l,n);
         break;
         case 3:
+            InsertionSort(l,n);
         break;
         case 4:
+            SelectionSort(l,n);
         break;
         case 5:
         break;
@@ -163,7 +206,7 @@ void salva(double memo, double tempo, int teste, int n){
     fclose(arquivo);
 
 }
-//descobre o maior valor de um vetor e retorna sua posicao; Começa a busca pelo incio do vetor
+//descobre o maior valor de um vetor e retorna sua posicao; ComeÃ§a a busca pelo incio do vetor
 int maior(double vet[], int n){
     int posiMaior=0, i;
     double maior=vet[0];
@@ -175,7 +218,7 @@ int maior(double vet[], int n){
     }
     return posiMaior;
 }
-//descobre o menor valor de um vetor e retorna sua posicao; Começa pelo fim do vetor
+//descobre o menor valor de um vetor e retorna sua posicao; ComeÃ§a pelo fim do vetor
 int menor(double vet[], int n){
     int posiMenor=n-1,i;
     double menor=vet[n-1];
@@ -188,7 +231,7 @@ int menor(double vet[], int n){
     return posiMenor;
 }
 /*
-Os dois codigos acima começam em pontos diferentes do vetor
+Os dois codigos acima comeÃ§am em pontos diferentes do vetor
 para caso todos os valores sejam iguais nao acabem retornando
 a mesma posicao
 */
@@ -267,14 +310,13 @@ int main(int argc, char *argv[]){
                 start_time = clock();*/
 
                 carrega(l, n, "data/dados_airbnb.txt");
-                menuOrganiza(1, l, n);
+                menuOrganiza(4, l, n);
                 escreve(l, n);
 
 
                 /*
                 end_time = clock();
                 cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
-
                 memory_used = get_memory_used_MB();
                 salva(memory_used,cpu_time_used,j,n);*/
             //}

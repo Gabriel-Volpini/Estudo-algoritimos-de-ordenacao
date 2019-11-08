@@ -1,0 +1,351 @@
+#include "tads.h"
+#include <ctype.h>
+#define size_p 10
+typedef struct{
+    int posi;
+    char titulo[20];
+}Chave_ex;
+void save_data(Lista *geral, Fila *em_andamento, Pilha *acoes){
+    FILE *lista_geral=fopen("data/lista_geral.txt", "w");
+    FILE *fila_em_andamento=fopen("data/fila_em_andamento.txt", "w");
+    FILE *pilha_acoes=fopen("data/pilha_acoes.txt", "w");
+    Pilha aux = new_pilha(size_p);
+    Tarefa atual;
+    Acao atual_a;
+
+    while(!is_empty_l(*geral)){
+        atual = remove_first(geral);
+        fprintf(lista_geral, "%s\t", atual.titulo);
+        fprintf(lista_geral, "%s\t", atual.descricao);
+        fprintf(lista_geral, "%s\t", atual.data);
+        fprintf(lista_geral, "%s\t", atual.status);
+        fprintf(lista_geral, "%d\n", atual.prioridade);
+    }
+
+    while(!is_empty_f(*em_andamento)){
+        atual = dequeue(em_andamento);
+        fprintf(fila_em_andamento, "%s\t", atual.titulo);
+        fprintf(fila_em_andamento, "%s\t", atual.descricao);
+        fprintf(fila_em_andamento, "%s\t", atual.data);
+        fprintf(fila_em_andamento, "%s\t", atual.status);
+        fprintf(fila_em_andamento, "%d\n", atual.prioridade);
+    }
+
+    while(!is_empty_pilha(*acoes)){
+        push(&aux, pop(acoes));
+    }
+    while(!is_empty_pilha(aux)){
+        atual_a=pop(&aux);
+        fprintf(pilha_acoes, "%s\t", atual_a.feito);
+        fprintf(pilha_acoes, "%s\t", atual_a.objeto.titulo);
+        fprintf(pilha_acoes, "%s\t", atual_a.objeto.descricao);
+        fprintf(pilha_acoes, "%s\t", atual_a.objeto.data);
+        fprintf(pilha_acoes, "%s\t", atual_a.objeto.status);
+        fprintf(pilha_acoes, "%d\n", atual_a.objeto.prioridade);
+    }
+
+    fclose(lista_geral);
+    fclose(fila_em_andamento);
+    fclose(pilha_acoes);
+    destroy_pilha(&aux);
+}
+void load_data(Lista *geral, Fila *em_andamento, Pilha *acoes){
+    FILE *lista_geral=fopen("data/lista_geral.txt", "r");
+    if(lista_geral!=NULL){
+    FILE *fp =fopen("data/lista_geral.txt", "r");;
+    fseek (fp, 0, SEEK_END);
+    int size = ftell(fp);
+    if (0 != size) {
+    FILE *fila_em_andamento=fopen("data/fila_em_andamento.txt", "r");
+    if(fila_em_andamento!=NULL){
+    fp=fopen("data/fila_em_andamento.txt", "r");
+    fseek (fp, 0, SEEK_END);
+    size = ftell(fp);
+    if (0 != size) {
+    FILE *pilha_acoes=fopen("data/pilha_acoes.txt", "r");
+    if(pilha_acoes!=NULL){
+    fp=fopen("data/pilha_acoes.txt", "r");
+    fseek (fp, 0, SEEK_END);
+    size = ftell(fp);
+    if (0 != size) {
+    Tarefa atual;
+    Acao atual_a;
+
+    while(!feof(lista_geral)){
+        fscanf(lista_geral, "%[^\t]\t", atual.titulo);
+        fscanf(lista_geral, "%[^\t]\t", atual.descricao);
+        fscanf(lista_geral, "%[^\t]\t", atual.data);
+        fscanf(lista_geral, "%[^\t]\t", atual.status);
+        fscanf(lista_geral, "%[^\n]\n", &atual.prioridade);
+        print_tarefa(atual);
+        enqueue_p(em_andamento, atual);
+    }
+
+    while(!feof(fila_em_andamento)){
+        fscanf(fila_em_andamento, "%[^\t]\t", atual.titulo);
+        fscanf(fila_em_andamento, "%[^\t]\t", atual.descricao);
+        fscanf(fila_em_andamento, "%[^\t]\t", atual.data);
+        fscanf(fila_em_andamento, "%[^\t]\t", atual.status);
+        fscanf(fila_em_andamento, "%[^\n]\n", &atual.prioridade);
+        add(geral, atual);
+    }
+
+    while(!feof(pilha_acoes)){
+        fscanf(pilha_acoes, "%[^\t]\t", atual_a.feito);
+        fscanf(pilha_acoes, "%[^\t]\t", atual_a.objeto.titulo);
+        fscanf(pilha_acoes, "%[^\t]\t", atual_a.objeto.descricao);
+        fscanf(pilha_acoes, "%[^\t]\t", atual_a.objeto.data);
+        fscanf(pilha_acoes, "%[^\t]\t", atual_a.objeto.status);
+        fscanf(pilha_acoes, "%[^\n]\n", &atual_a.objeto.prioridade);
+        push(acoes, atual_a);
+    }
+
+    fclose(lista_geral);
+    fclose(fila_em_andamento);
+    fclose(pilha_acoes);
+    fclose(fp);
+}}}}}}}
+bool data_valida(char data[]){
+    for(int i=0;i<strlen(data);i++)
+        if((i != 2 && i != 5) && !isdigit(data[i]))
+            return false;
+    if(data[2] != '/' || data[5] != '/')
+        return false;
+    return true;
+}
+//transforma todas as letras das string em maisculas
+void case_up(char str[]){
+    for(int i=0;i<strlen(str);i++)
+        str[i]=toupper(str[i]);
+}
+
+Tarefa nova_t(){
+    Tarefa new_t;
+    printf("\t\tEscolha o titulo da Tarefa:\n\t\t=> ");
+    gets(new_t.titulo);
+    fflush(stdin);
+
+    printf("\t\tEscolha a descricao da Tarefa\n\t\t=> ");
+    gets(new_t.descricao);
+    fflush(stdin);
+
+    do{
+        printf("\t\tEscolha a data da Tarefa (use a seguinte formatacao -> DD/MM/AA):\n\t\t=> ");
+        scanf("%s", new_t.data);
+        fflush(stdin);
+    }while(!data_valida(new_t.data));
+
+    do{
+        printf("\t\tEscolha o status da Tarefa (Pendente, Em Andamento, Atrasada, Concluida):\n\t\t=> ");
+        gets(new_t.status);
+        fflush(stdin);
+        case_up(new_t.status);
+    }while(strcmp(new_t.status,"PENDENTE")!=0 && strcmp(new_t.status,"EM ANDAMENTO")!=0 && strcmp(new_t.status,"ATRASADA")!=0 && strcmp(new_t.status,"CONCLUIDA")!=0);
+
+    do{
+        printf("\t\tEscolha a prioridade da Tarefa:\n\t\t1-ALTA\n\t\t2-MEDIA\n\t\t3-BAIXA\n\t\t=> ");
+        scanf("%d", &new_t.prioridade);
+        fflush(stdin);
+    }while(new_t.prioridade < 1 || new_t.prioridade > 3);
+
+    case_up(new_t.titulo);
+    case_up(new_t.descricao);
+
+
+    return new_t;
+}
+
+Acao nova_a(Tarefa t, int op){
+    Acao a;
+    a.objeto = t;
+    switch(op){
+        case 1:
+            strcpy(a.feito,"Criada nova tarefa");
+        break;
+        case 2:
+            strcpy(a.feito,"Tarefa deletada");
+        break;
+        case 3:
+            strcpy(a.feito,"Tarefa editada");
+        break;
+    }
+    strcat(a.feito, "\0");
+    return a;
+}
+
+bool criar(Lista *geral, Fila *f_em_andamento, Pilha *acoes){
+    Tarefa t = nova_t();
+    Acao a = nova_a(t, 1);
+    //caso a tarefa nao esteja concluida adiciona na fila prioritaria
+    if(strcmp(t.status, "CONCLUIDA") != 0)
+        enqueue_p(f_em_andamento, t);
+
+    add(geral, t);
+    push(acoes, a);
+    return 1;
+}
+char* get_titulo(){
+    char *titulo = (char*)malloc(20*sizeof(char));
+    printf("\t\tEscreva o titulo da celula desejada:\n\t\t=> ");
+    gets(titulo);
+    fflush(stdin);
+    case_up(titulo);
+    return titulo;
+}
+
+bool excluir(Lista *geral, Fila *f_em_andamento, Pilha *acoes){
+    char *chave = get_titulo();
+    //caso o elemento for encontrado remove ele da lista geral
+    dequeue_at(f_em_andamento, chave);
+    Tarefa t =remove_at(geral, chave);
+
+    if(t.prioridade!=-1){
+        Acao a = nova_a(t, 2);
+        push(acoes, a);
+        free(chave);
+        return 1;
+    }
+    printf("\t\tTarefa %s nao encontrada\n", chave);
+    free(chave);
+    return 0;
+}
+bool editar(Lista *geral, Fila *f_em_andamento, Pilha *acoes){
+
+    char *chave = get_titulo();
+
+    Tarefa edit = nova_t();
+
+    Tarefa editada = edit_geral(geral, edit, chave);
+
+    if(editada.prioridade != -1){
+        edit_fp(f_em_andamento, edit, chave);
+        Acao a = nova_a(editada, 3);
+        push(acoes, a);
+        free(chave);
+        return 1;
+    }
+    printf("\t\tTarefa %s nao encontrada\n", chave);
+    free(chave);
+    return 0;
+}
+
+void printAll(Lista *geral, Fila *em_andamento, Pilha *acoes){
+
+    int selecionado = 0;
+    system("cls");
+    printf("\n\t\t|============================ IMPRIMIR ==================================|\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|                      1 => Imprimir lista geral                         |\n");
+    printf("\t\t|                      2 => Imprimir tarefas em andamento                |\n");
+    printf("\t\t|                      3 => Imprimir historico de acoes                  |\n");
+    printf("\t\t|                      4 => Voltar                                       |\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|========================================================================|\n\n\t\t => ");
+    scanf("%d",&selecionado);
+    fflush(stdin);
+
+    switch(selecionado){
+        case 1:
+            print_l(*geral);
+            break;
+        case 2:
+            print_f(*em_andamento);
+            break;
+        case 3:
+            print_p(*acoes);
+            break;
+        case 4:
+            break;
+        default:
+            printf("\n\t\tValor invalido...\n\t\t");
+            system("PAUSE");
+            printAll( geral, em_andamento, acoes );
+            break;
+    }
+    printf("\t\t");
+    fflush(stdin);
+    return;
+}
+
+void menu(Lista *geral, Fila *em_andamento, Pilha *acoes){
+
+
+
+    int selecionado = 0;
+    system("cls");
+    printf("\n\t\t|================================ MENU ==================================|\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|                      1 => Inserir nova tarefa                          |\n");
+    printf("\t\t|                      2 => Excluir tarefa                               |\n");
+    printf("\t\t|                      3 => Editar tarefa                                |\n");
+    printf("\t\t|                      4 => imprimir                                     |\n");
+    printf("\t\t|                      5 => Sair                                         |\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|                                                                        |\n");
+    printf("\t\t|========================================================================|\n\n\t\t=> ");
+    scanf("%d",&selecionado);
+    fflush(stdin);
+
+    switch(selecionado){
+        case 1:
+            if( criar(geral, em_andamento, acoes) ){
+                printf("\n\t\tTarefa criada com sucesso\n\t\t");
+            } else {
+                printf("\n\t\tOcorreu um erro ao tentar criar a tarefa\n\t\t");
+            }
+            system("PAUSE");
+            menu(geral, em_andamento, acoes);
+            break;
+        case 2:
+            if( excluir(geral, em_andamento, acoes) ){
+                printf("\n\t\tTarefa removida com sucesso\n\t\t");
+            }else{
+                printf("\n\t\tOcorreu um erro ao remover a tarefa\n\t\t");
+            }
+            system("PAUSE");
+            menu(geral, em_andamento, acoes);
+            break;
+        case 3:
+            if( editar(geral, em_andamento, acoes) ){
+                printf("\n\t\tTarefa editada com sucesso\n\t\t");
+            }else{
+                printf("\n\t\tOcorreu um erro ao editar a tarefa\n\t\t");
+            }
+            system("PAUSE");
+            menu(geral, em_andamento, acoes);
+            break;
+        case 4:
+            printAll( geral, em_andamento, acoes );
+            system("PAUSE");
+            menu(geral, em_andamento, acoes);
+            break;
+        case 5:
+            save_data(geral, em_andamento, acoes);
+            printf("\t\t");
+            system("PAUSE");
+            return;
+        default:
+            printf("\n\t\tValor invalido...\n\t\t");
+            system("PAUSE");
+            menu(geral, em_andamento, acoes);
+            break;
+    }
+    return;
+}
+
+int main(){
+    Lista geral = new_lista();
+    Fila em_andamento = new_fila();
+    Pilha acoes = new_pilha(size_p);
+
+    load_data(&geral, &em_andamento, &acoes);
+
+    menu(&geral, &em_andamento, &acoes);
+
+    destroy_pilha(&acoes);
+    destroy_lista(&geral);
+    destroy_fila(&em_andamento);
+}
